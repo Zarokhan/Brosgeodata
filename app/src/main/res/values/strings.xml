@@ -4,6 +4,11 @@
     <string name="prompt_alias">Alias</string>
     <string name="action_sign_in">Sign in</string>
     <string name="error_invalid_alias">This alias is too short</string>
+    /* GPS prompt */
+    <string name="prompt_title">GPS not active</string>
+    <string name="prompt_desc">OK activate GPS or CANCEL shutdown app.</string>
+    <string name="prompt_positive">OK</string>
+    <string name="prompt_negative">CANCEL</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -17,5 +22,9 @@
         completions."
     </string>
     <string name="title_activity_tesstlogin">sigheil</string>
+    <string name="title_activity_main">Map</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
