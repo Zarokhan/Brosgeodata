@@ -3,6 +3,7 @@
 
     <string name="prompt_alias">Alias</string>
     <string name="action_sign_in">Sign in</string>
+    <string name="error_invalid_alias">This alias is too short</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

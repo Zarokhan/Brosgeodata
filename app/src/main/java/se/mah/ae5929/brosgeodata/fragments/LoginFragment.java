@@ -57,7 +57,12 @@ public class LoginFragment extends BaseFragment<LoginController> {
     private class SignInListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            if(isAliasValid())
+            if(!isAliasValid())
+            {
+                mAliasView.setError(getResources().getString(R.string.error_invalid_alias));
+                mAliasView.requestFocus();
+            }
+            else
                 controller.attemptLogin(mAliasView.getText().toString());
         }
     }
@@ -66,11 +71,14 @@ public class LoginFragment extends BaseFragment<LoginController> {
         return mAliasView.getText().toString().length() > 3;
     }
 
+    public void resetErrors(){
+        mAliasView.setError(null);
+    }
     /**
      * Shows the progress UI and hides the login form.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
+    public void showProgress(final boolean show) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
@@ -102,6 +110,7 @@ public class LoginFragment extends BaseFragment<LoginController> {
         }
     }
 
+    /* Saved instance */
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);

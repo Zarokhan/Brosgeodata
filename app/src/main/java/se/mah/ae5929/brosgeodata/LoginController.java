@@ -12,7 +12,10 @@ import se.mah.ae5929.brosgeodata.utility.BaseController;
  */
 public class LoginController extends BaseController<LoginActivity> {
 
+    private LoginFragment loginFrag = null;
     private UserLoginTask mAuthTask = null;
+
+    private String alias;
 
     public LoginController(LoginActivity activity) {
         super(activity);
@@ -20,9 +23,9 @@ public class LoginController extends BaseController<LoginActivity> {
     }
 
     private void initLoginPhase(){
-        LoginFragment frag = new LoginFragment();
-        frag.setController(this);
-        getActivity().addFragment(frag, "LOGIN");
+        loginFrag = new LoginFragment();
+        loginFrag.setController(this);
+        getActivity().addFragment(loginFrag, "LOGIN");
     }
 
     /**
@@ -31,50 +34,18 @@ public class LoginController extends BaseController<LoginActivity> {
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin(String alias) {
-        /*if (mAuthTask != null) {
+        this.alias = alias;
+
+        if (mAuthTask != null) {
             return;
         }
 
         // Reset errors.
-        mEmailView.setError(null);
-        mPasswordView.setError(null);
+        loginFrag.resetErrors();
 
-        // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
-        }*/
+        loginFrag.showProgress(true);
+        mAuthTask = new UserLoginTask(alias);
+        mAuthTask.execute((Void) null);
     }
 
     /**
@@ -83,12 +54,10 @@ public class LoginController extends BaseController<LoginActivity> {
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mEmail;
-        private final String mPassword;
+        private final String mAlias;
 
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
+        UserLoginTask(String alias) {
+            this.mAlias = alias;
         }
 
         @Override
