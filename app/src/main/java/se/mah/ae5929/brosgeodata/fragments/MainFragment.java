@@ -7,17 +7,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.controllers.MainController;
-import se.mah.ae5929.brosgeodata.main.MainActivity;
 import se.mah.ae5929.brosgeodata.utility.BaseFragment;
 
 /**
@@ -43,7 +38,7 @@ public class MainFragment extends BaseFragment<MainController> implements OnMapR
         key = "mainfragment";
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);// getFragmentManager().findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map); //(SupportMapFragment) getFragmentManager().findFragmentById(R.id.map); //
         mapFragment.getMapAsync(this);
     }
 
