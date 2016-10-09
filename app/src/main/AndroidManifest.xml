@@ -40,7 +40,7 @@
             android:label="@string/title_activity_main"></activity>
 
         <service
-            android:name=".main.BroService"
+            android:name=".main.TCPConnectionService"
             android:enabled="true"
             android:exported="false">
         </service>

@@ -18,26 +18,8 @@ public class MainActivity extends BaseActivity<MainController> {
     }
 
     @Override
-    protected void onStart(){
-        super.onStart();
-        controller.onStart();
-    }
-
-    @Override
-    protected void onStop(){
-        super.onStop();
-        controller.onStop();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        controller.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        controller.onPause();
+    public void onDestroy(){
+        super.onDestroy();
+        controller.onDestroy();
     }
 }
