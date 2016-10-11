@@ -12,7 +12,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 
 import se.mah.ae5929.brosgeodata.R;
-import se.mah.ae5929.brosgeodata.controllers.MainController;
+import se.mah.ae5929.brosgeodata.main.MainController;
 import se.mah.ae5929.brosgeodata.utility.BaseFragment;
 
 /**

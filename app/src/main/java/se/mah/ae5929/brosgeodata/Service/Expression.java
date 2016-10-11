@@ -1,4 +1,4 @@
-package se.mah.ae5929.brosgeodata.main;
+package se.mah.ae5929.brosgeodata.service;
 
 import java.io.Serializable;
 

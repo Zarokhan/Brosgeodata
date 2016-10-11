@@ -1,4 +1,4 @@
-package se.mah.ae5929.brosgeodata.main;
+package se.mah.ae5929.brosgeodata.service;
 
 import android.app.Service;
 import android.content.Intent;
@@ -35,12 +35,12 @@ public class TCPConnectionService extends Service {
 
     /* Service override methods & Binder class */
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
+    public void onCreate() {
         thread = new RunOnThread();
         receiveBuffer = new Buffer<String>();
         Log.d(TAG, "onStartCommand");
-        return Service.START_STICKY;
     }
+
     // Service binder class
     public class TCPConnectionBinder extends Binder {
         public TCPConnectionService getService(){

@@ -7,6 +7,8 @@
     /* GPS prompt */
     <string name="prompt_title">GPS not active</string>
     <string name="prompt_desc">OK activate GPS or CANCEL shutdown app.</string>
+    <string name="prompt_title_net">Connection not active</string>
+    <string name="prompt_desc_net">OK activate network or CANCEL shutdown app.</string>
     <string name="prompt_positive">OK</string>
     <string name="prompt_negative">CANCEL</string>
 

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import se.mah.ae5929.brosgeodata.R;
-import se.mah.ae5929.brosgeodata.controllers.LoginController;
 import se.mah.ae5929.brosgeodata.utility.BaseActivity;
 
 /**
@@ -28,6 +27,7 @@ public class LoginActivity extends BaseActivity<LoginController> {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode == Activity.RESULT_CANCELED && requestCode==NAME) {
             controller.confirmGPS();
+            controller.confirmNetwork();
         }
     }
 }

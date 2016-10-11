@@ -1,4 +1,4 @@
-package se.mah.ae5929.brosgeodata.controllers;
+package se.mah.ae5929.brosgeodata.main;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.provider.Settings;
 import android.util.Log;
@@ -36,6 +38,40 @@ public class LoginController extends BaseController<LoginActivity> {
         getActivity().addFragment(mLoginFrag, "LOGIN");
 
         confirmGPS();
+        confirmNetwork();
+    }
+
+    public void confirmNetwork() {
+        if(!isOnline(getActivity())){
+            Resources res = getActivity().getResources();
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+            alertDialogBuilder.setTitle(res.getString(R.string.prompt_title_net));
+            alertDialogBuilder.setMessage(res.getString(R.string.prompt_desc_net));
+            alertDialogBuilder.setPositiveButton(res.getString(R.string.prompt_positive), new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(Settings.ACTION_SETTINGS);
+
+                    getActivity().startActivityForResult(intent, LoginActivity.NAME);
+                }
+            });
+            alertDialogBuilder.setNegativeButton(res.getString(R.string.prompt_negative), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    getActivity().finish();
+                }
+            });
+
+            AlertDialog dialog = alertDialogBuilder.create();
+            dialog.show();
+        }
+    }
+
+    private boolean isOnline(Context context) {
+        ConnectivityManager connMgr = (ConnectivityManager) getActivity().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = connMgr.getActiveNetworkInfo();
+
+        return (info != null && info.isConnected());
     }
 
     public void confirmGPS(){

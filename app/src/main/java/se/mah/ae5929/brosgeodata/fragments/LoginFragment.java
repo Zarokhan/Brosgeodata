@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
-import se.mah.ae5929.brosgeodata.controllers.LoginController;
+import se.mah.ae5929.brosgeodata.main.LoginController;
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.utility.BaseFragment;
 

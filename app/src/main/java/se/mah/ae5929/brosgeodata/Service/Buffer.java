@@ -1,4 +1,4 @@
-package se.mah.ae5929.brosgeodata.main;
+package se.mah.ae5929.brosgeodata.service;
 
 import java.util.LinkedList;
 
@@ -9,10 +9,14 @@ public class Buffer<Type> {
     private LinkedList<Type> list = new LinkedList<Type>();
 
     public synchronized void put(Type obj) {
-        list.add(obj);
+        list.addLast(obj);
+        notifyAll();
     }
 
     public synchronized Type get() throws InterruptedException {
-        return list.pollFirst();
+        while(list.isEmpty())
+            wait();
+
+        return list.removeFirst();
     }
 }

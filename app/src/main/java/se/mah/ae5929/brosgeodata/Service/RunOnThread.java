@@ -1,6 +1,4 @@
-package se.mah.ae5929.brosgeodata.main;
-
-import java.util.LinkedList;
+package se.mah.ae5929.brosgeodata.service;
 
 /**
  * Created by Zarokhan on 2016-10-09.

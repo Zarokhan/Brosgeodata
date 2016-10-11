@@ -3,7 +3,6 @@ package se.mah.ae5929.brosgeodata.main;
 import android.os.Bundle;
 
 import se.mah.ae5929.brosgeodata.R;
-import se.mah.ae5929.brosgeodata.controllers.MainController;
 import se.mah.ae5929.brosgeodata.utility.BaseActivity;
 
 public class MainActivity extends BaseActivity<MainController> {
@@ -18,8 +17,19 @@ public class MainActivity extends BaseActivity<MainController> {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        controller.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        controller.onStop();
+    }
+
+    @Override
     public void onDestroy(){
         super.onDestroy();
-        controller.onDestroy();
     }
 }
