@@ -6,6 +6,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
@@ -28,8 +30,8 @@ public class TCPConnectionService extends Service {
     private Receive receive;
     private Buffer<String> receiveBuffer;
     private Socket socket;
-    private ObjectInputStream input;
-    private ObjectOutputStream output;
+    private DataInputStream input;
+    private DataOutputStream output;
     private InetAddress address;
     private Exception exception;
 
@@ -66,8 +68,8 @@ public class TCPConnectionService extends Service {
         Log.d(TAG, "disconnect");
     }
 
-    public void send(Expression exp) {
-        thread.execute(new Send(exp));
+    public void send(String jsonMessage) {
+        thread.execute(new Send(jsonMessage));
         Log.d(TAG, "send");
     }
 
@@ -88,7 +90,7 @@ public class TCPConnectionService extends Service {
             String result = null;
             try {
                 while (result != null) {
-                    result = (String) input.readObject();
+                    result = input.readUTF();
                     receiveBuffer.put(result);
                 }
             } catch (Exception e) {
@@ -104,8 +106,8 @@ public class TCPConnectionService extends Service {
             try {
                 address = InetAddress.getByName(IP);
                 socket = new Socket(address, PORT);
-                input = new ObjectInputStream(socket.getInputStream());
-                output = new ObjectOutputStream(socket.getOutputStream());
+                input = new DataInputStream(socket.getInputStream());
+                output = new DataOutputStream(socket.getOutputStream());
                 output.flush();
                 receiveBuffer.put("CONNECTED");
                 receive = new Receive();
@@ -138,17 +140,18 @@ public class TCPConnectionService extends Service {
     }
 
     private class Send implements Runnable {
-        private Expression exp;
+        String jsonMessage = null;
 
-        public Send(Expression exp) {
-            this.exp = exp;
+        public Send(String jsonMessage) {
+            this.jsonMessage = jsonMessage;
         }
 
         @Override
         public void run() {
             Log.d(TAG, "Sending");
             try {
-                output.writeObject(exp);
+                //output.writeObject(exp);
+                output.writeUTF(jsonMessage);
                 output.flush();
             } catch (Exception e) {
                 exception = e;

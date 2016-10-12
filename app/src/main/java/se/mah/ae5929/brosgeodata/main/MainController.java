@@ -17,6 +17,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
 import se.mah.ae5929.brosgeodata.service.TCPConnectionService;
 import se.mah.ae5929.brosgeodata.utility.BaseController;
@@ -38,6 +41,8 @@ public class MainController extends BaseController<MainActivity> {
 
     private int mID;
     private String mAlias;
+    private String mGroup;
+    private LatLng mLocation;
 
     public MainController(MainActivity activity) { super(activity); }
 
@@ -66,10 +71,10 @@ public class MainController extends BaseController<MainActivity> {
         mMap.setMyLocationEnabled(true);
 
         Location location = getCurrentLocation();
-        LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
+        mLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
         float zoom = 9.0f;
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, zoom));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLocation, zoom));
         Log.d(TAG, "onMapReady");
     }
 
@@ -88,6 +93,40 @@ public class MainController extends BaseController<MainActivity> {
         Intent serviceIntent = new Intent(getActivity(), TCPConnectionService.class);
         getActivity().bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
         Log.d(TAG, "onStart");
+    }
+
+    public void onResume() {
+        JSONObject register = new JSONObject();
+        JSONObject deregister = new JSONObject();
+        JSONObject requestMembers = new JSONObject();
+        JSONObject groups = new JSONObject();
+        JSONObject position = new JSONObject();
+
+        try {
+            // Register
+            register.put("type", "register");
+            register.put("group", mGroup);
+            register.put("member", mAlias);
+            // deregister
+            deregister.put("type", "unregister");
+            deregister.put("id", mID);
+            // request group members
+            requestMembers.put("type", "members");
+            requestMembers.put("group", mGroup);
+            // current group
+            groups.put("type", "groups");
+            // set position
+            position.put("type", "location");
+            position.put("id", mID);
+            position.put("longitude", (float)mLocation.longitude);
+            position.put("latitude", (float)mLocation.latitude);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        if(mBound) {
+            //mService.send();
+        }
     }
 
     // Stops the service
