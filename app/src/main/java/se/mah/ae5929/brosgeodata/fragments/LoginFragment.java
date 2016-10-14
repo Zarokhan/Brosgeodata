@@ -43,7 +43,7 @@ public class LoginFragment extends BaseFragment<LoginController> {
     @Override
     protected void initFragmentComponents(View view) {
         // Set up the login form.
-        mAliasView = (AutoCompleteTextView) view.findViewById(R.id.alias);
+        mAliasView = (AutoCompleteTextView) view.findViewById(R.id.username);
 
         mAliasSignInButton = (Button) view.findViewById(R.id.sign_in_button);
         mAliasSignInButton.setOnClickListener(new SignInListener());

@@ -21,8 +21,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
-import se.mah.ae5929.brosgeodata.service.TCPConnectionService;
 import se.mah.ae5929.brosgeodata.utility.BaseController;
+import se.mah.ae5929.brosgeodata.service.TCPConnectionService;
 
 /**
  * Created by Robin on 2016-10-04.
@@ -96,6 +96,7 @@ public class MainController extends BaseController<MainActivity> {
     }
 
     public void onResume() {
+        /*
         JSONObject register = new JSONObject();
         JSONObject deregister = new JSONObject();
         JSONObject requestMembers = new JSONObject();
@@ -123,6 +124,7 @@ public class MainController extends BaseController<MainActivity> {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        */
 
         if(mBound) {
             //mService.send();
