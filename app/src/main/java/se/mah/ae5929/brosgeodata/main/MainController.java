@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
+import android.util.JsonReader;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -22,6 +23,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
+import org.json.JSONStringer;
+import org.json.JSONTokener;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
@@ -42,7 +45,7 @@ public class MainController extends BaseController<MainActivity> {
     private TCPConnectionService mService;
     private boolean mBound = false;
 
-    private int mID;
+    private long mID;
     private String mUser;
     private String mGroup;
     private LatLng mLocation;
@@ -124,34 +127,6 @@ public class MainController extends BaseController<MainActivity> {
             return;
         }
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
-
-        /*
-
-        JSONObject deregister = new JSONObject();
-        JSONObject requestMembers = new JSONObject();
-        JSONObject groups = new JSONObject();
-        JSONObject position = new JSONObject();
-
-        try {
-            // Register
-
-            // deregister
-            deregister.put("type", "unregister");
-            deregister.put("id", mID);
-            // request group members
-            requestMembers.put("type", "members");
-            requestMembers.put("group", mGroup);
-            // current group
-            groups.put("type", "groups");
-            // set position
-            position.put("type", "location");
-            position.put("id", mID);
-            position.put("longitude", (float)mLocation.longitude);
-            position.put("latitude", (float)mLocation.latitude);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        */
     }
 
     public void onPause() {
@@ -191,21 +166,35 @@ public class MainController extends BaseController<MainActivity> {
                 register.put("group", mGroup);
                 register.put("member", mUser);
 
-                Log.d(TAG, register.toString());
-
+                // Send registration
                 mService.send(register.toString());
 
+                // Wait for registration
                 String answer = null;
-                while(answer == null)
+                while(answer == null || answer.isEmpty())
+                {
                     answer = mService.receive();
+                    try {
+                        JSONObject jsonobj = new JSONObject(answer);
+                        if(jsonobj.getString("type").equals("register")) {
+                            String group = jsonobj.getString("group");
+                            if(mGroup.equals(group))
+                            {
+                                String id = (String)jsonobj.get("id");
+                                Long test = Long.parseLong(id.split(",")[2]);
+                                mID = test;
+                            }
+                        }
+                        else {
+                            answer = null;
+                        }
+                    } catch (Exception e) {
+                        answer = null;
+                    }
 
-                Log.d(TAG, answer);
+                }
 
-                // Register user
-                // Retreive ID
-                // Register group
-                // Get group id
-                // Handle group already exist
+                Log.d(TAG, "Registration complete");
             } catch (Exception e) {
                 e.printStackTrace();
             }
