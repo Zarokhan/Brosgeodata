@@ -34,12 +34,14 @@ public class TCPConnectionService extends Service {
     private DataOutputStream output;
     private InetAddress address;
     private Exception exception;
+    private boolean isConnected;
 
     /* Service override methods & Binder class */
     @Override
     public void onCreate() {
         thread = new RunOnThread();
         receiveBuffer = new Buffer<String>();
+        connect();
         Log.d(TAG, "onStartCommand");
     }
 
@@ -83,6 +85,10 @@ public class TCPConnectionService extends Service {
         return result;
     }
 
+    public boolean isConnected() {
+        return isConnected;
+    }
+
     /* My own classes */
     private class Receive extends Thread {
         public void run() {
@@ -112,6 +118,7 @@ public class TCPConnectionService extends Service {
                 receiveBuffer.put("CONNECTED");
                 receive = new Receive();
                 receive.start();
+                isConnected = true;
             } catch (Exception e) {
                 exception = e;
                 receiveBuffer.put("EXCEPTION");
@@ -132,6 +139,7 @@ public class TCPConnectionService extends Service {
                     socket.close();
                 thread.stop();
                 receiveBuffer.put("CLOSED");
+                isConnected = false;
             } catch (Exception e) {
                 exception = e;
                 receiveBuffer.put("EXCEPTION");

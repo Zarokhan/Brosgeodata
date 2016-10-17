@@ -6,9 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
@@ -16,10 +19,12 @@ import android.util.Log;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
 import se.mah.ae5929.brosgeodata.utility.BaseController;
 import se.mah.ae5929.brosgeodata.service.TCPConnectionService;
@@ -44,7 +49,14 @@ public class MainController extends BaseController<MainActivity> {
     private String mGroup;
     private LatLng mLocation;
 
-    public MainController(MainActivity activity) { super(activity); }
+    private LocationManager mLocationManager;
+    private LocationListener mLocationListener;
+
+    private MainListener mMainThread;
+
+    public MainController(MainActivity activity) {
+        super(activity);
+    }
 
     @Override
     protected void initializeController() {
@@ -55,6 +67,12 @@ public class MainController extends BaseController<MainActivity> {
         mMainFrag = new MainFragment();
         mMainFrag.setController(this);
 
+        mLocationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        mLocationListener = new LocList();
+
+        mMainThread = new MainListener();
+        mMainThread.start();
+
         getActivity().addFragment(mMainFrag, "MAIN");
 
         Log.d(TAG, "initializeController");
@@ -64,17 +82,19 @@ public class MainController extends BaseController<MainActivity> {
     public void onMapReady(GoogleMap map) {
         this.mMap = map;
 
-        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        /*if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             return;
-        }
-        mMap.setMyLocationEnabled(true);
+        }*/
+        //mMap.setMyLocationEnabled(true);
 
         Location location = getCurrentLocation();
         mLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
+        Resources res = getActivity().getResources();
         float zoom = 9.0f;
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLocation, zoom));
+        mMap.addMarker(new MarkerOptions().position(mLocation).title(res.getString(R.string.marker_my_position)));
         Log.d(TAG, "onMapReady");
     }
 
@@ -88,6 +108,7 @@ public class MainController extends BaseController<MainActivity> {
         return locationManager.getLastKnownLocation(provider);
     }
 
+
     // Start point of service
     public void onStart() {
         Intent serviceIntent = new Intent(getActivity(), TCPConnectionService.class);
@@ -96,6 +117,12 @@ public class MainController extends BaseController<MainActivity> {
     }
 
     public void onResume() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return;
+        }
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000 * 60, 0, mLocationListener);
+
         /*
         JSONObject register = new JSONObject();
         JSONObject deregister = new JSONObject();
@@ -126,9 +153,17 @@ public class MainController extends BaseController<MainActivity> {
         }
         */
 
-        if(mBound) {
+        if (mBound) {
             //mService.send();
         }
+    }
+
+    public void onPause() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return;
+        }
+        mLocationManager.removeUpdates(mLocationListener);
     }
 
     // Stops the service
@@ -137,6 +172,64 @@ public class MainController extends BaseController<MainActivity> {
             mService.disconnect();
             getActivity().unbindService(mConnection);
             mBound = false;
+        }
+    }
+
+    // Handling main stuff
+    private class MainListener extends Thread {
+
+        @Override
+        public void run() {
+            try {
+                while(mService == null)
+                    this.wait();
+
+                // Wait if we are not yet connected;
+                while(!mService.isConnected()){
+                    Log.d(TAG, "Waiting for connection");
+                    this.wait();
+                }
+
+                Log.d(TAG, "Connection established");
+
+                while (mService.isConnected()) {
+                    Log.d(TAG, "RUNNING");
+                    Thread.sleep(1000);
+                }
+                // Register user
+                // Retreive ID
+                // Register group
+                // Get group id
+                // Handle group already exist
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class LocList implements LocationListener {
+
+        @Override
+        public void onLocationChanged(Location location) {
+            double lat = location.getLatitude();
+            double lon = location.getLongitude();
+            mLocation = new LatLng(lat, lon);
+            Log.d(TAG, "onLocationChanged Lng=" + lon + " Lat=" + lat);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
         }
     }
 

@@ -34,6 +34,12 @@ public class MainActivity extends BaseActivity<MainController> {
         controller.onResume();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        controller.onPause();
+    }
+
 
     @Override
     public void onDestroy(){
