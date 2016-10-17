@@ -95,13 +95,17 @@ public class TCPConnectionService extends Service {
             Log.d(TAG, "Receiveing");
             String result = null;
             try {
-                while (result != null) {
+                while (result == null) {
                     result = input.readUTF();
                     receiveBuffer.put(result);
+                    result = null;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.d(TAG, "RECEIVE EXCEPTION");
             }
+
+            Log.d(TAG, "Receiveing DONE");
         }
     }
 

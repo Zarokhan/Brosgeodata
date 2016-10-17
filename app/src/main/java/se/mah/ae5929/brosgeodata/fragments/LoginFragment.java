@@ -25,10 +25,11 @@ import se.mah.ae5929.brosgeodata.utility.BaseFragment;
  */
 public class LoginFragment extends BaseFragment<LoginController> {
 
-    private AutoCompleteTextView mAliasView;
+    private AutoCompleteTextView mUsernameView;
+    private AutoCompleteTextView mGroupView;
     private View mProgressView;
     private View mLoginFormView;
-    private Button mAliasSignInButton;
+    private Button mSignInBtn;
 
     public LoginFragment() { }
 
@@ -43,10 +44,11 @@ public class LoginFragment extends BaseFragment<LoginController> {
     @Override
     protected void initFragmentComponents(View view) {
         // Set up the login form.
-        mAliasView = (AutoCompleteTextView) view.findViewById(R.id.username);
+        mUsernameView = (AutoCompleteTextView) view.findViewById(R.id.username);
+        mGroupView = (AutoCompleteTextView) view.findViewById(R.id.group);
 
-        mAliasSignInButton = (Button) view.findViewById(R.id.sign_in_button);
-        mAliasSignInButton.setOnClickListener(new SignInListener());
+        mSignInBtn = (Button) view.findViewById(R.id.sign_in_button);
+        mSignInBtn.setOnClickListener(new SignInListener());
 
         mLoginFormView = view.findViewById(R.id.login_form);
         mProgressView = view.findViewById(R.id.progressBar);
@@ -57,22 +59,28 @@ public class LoginFragment extends BaseFragment<LoginController> {
     private class SignInListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            if(!isAliasValid())
+            if(!isUsernameValid())
             {
-                mAliasView.setError(getResources().getString(R.string.error_invalid_alias));
-                mAliasView.requestFocus();
+                mUsernameView.setError(getResources().getString(R.string.error_invalid_alias));
+                mUsernameView.requestFocus();
+            }
+            else if(!isGroupValid())
+            {
+                mGroupView.setError(getResources().getString(R.string.error_invalid_group));
+                mGroupView.requestFocus();
             }
             else
-                controller.attemptLogin(mAliasView.getText().toString());
+                controller.attemptLogin(mUsernameView.getText().toString(), mGroupView.getText().toString());
         }
     }
 
-    private boolean isAliasValid() {
-        return mAliasView.getText().toString().length() > 3;
+    private boolean isUsernameValid() {
+        return mUsernameView.getText().toString().length() > 3;
     }
+    private boolean isGroupValid() { return mGroupView.getText().toString().length() > 3; }
 
     public void resetErrors(){
-        mAliasView.setError(null);
+        mUsernameView.setError(null);
     }
     /**
      * Shows the progress UI and hides the login form.
@@ -116,7 +124,9 @@ public class LoginFragment extends BaseFragment<LoginController> {
         super.onActivityCreated(savedInstanceState);
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences(key, Activity.MODE_PRIVATE);
         String alias = sharedPreferences.getString("alias", "");
-        mAliasView.setText(alias);
+        String group = sharedPreferences.getString("group", "");
+        mUsernameView.setText(alias);
+        mGroupView.setText(group);
     }
 
     @Override
@@ -124,8 +134,10 @@ public class LoginFragment extends BaseFragment<LoginController> {
         super.onSaveInstanceState(outState);
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences(key, Activity.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        String alias = mAliasView.getText().toString();
+        String alias = mUsernameView.getText().toString();
+        String group = mGroupView.getText().toString();
         editor.putString("alias", alias);
+        editor.putString("group", group);
         editor.apply();
     }
 

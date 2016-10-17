@@ -1,7 +1,6 @@
 package se.mah.ae5929.brosgeodata.main;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,8 +14,6 @@ import android.util.Log;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.fragments.LoginFragment;
-import se.mah.ae5929.brosgeodata.main.LoginActivity;
-import se.mah.ae5929.brosgeodata.main.MainActivity;
 import se.mah.ae5929.brosgeodata.utility.BaseController;
 
 /**
@@ -27,7 +24,8 @@ public class LoginController extends BaseController<LoginActivity> {
     private LoginFragment mLoginFrag;
     private UserLoginTask mLoginTask;
 
-    private String mAlias;
+    private String mUsername;
+    private String mGroup;
 
     public LoginController(LoginActivity activity) { super(activity); }
 
@@ -107,8 +105,9 @@ public class LoginController extends BaseController<LoginActivity> {
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    public void attemptLogin(String alias) {
-        this.mAlias = alias;
+    public void attemptLogin(String alias, String group) {
+        this.mUsername = alias;
+        this.mGroup = group;
 
         if (mLoginTask != null) {
             return;
@@ -125,7 +124,8 @@ public class LoginController extends BaseController<LoginActivity> {
     private void accessGranted(int id) {
         Intent intent = new Intent(getActivity().getApplicationContext(), MainActivity.class);
         intent.putExtra("aliasid", id);
-        intent.putExtra("alias", mAlias);
+        intent.putExtra("alias", mUsername);
+        intent.putExtra("group", mGroup);
         activity.startActivity(intent);
     }
 

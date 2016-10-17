@@ -3,7 +3,8 @@
 
     <string name="prompt_username">User name</string>
     <string name="action_sign_in">Sign in</string>
-    <string name="error_invalid_alias">This alias is too short</string>
+    <string name="error_invalid_alias">This username is too short</string>
+    <string name="error_invalid_group">This group name is too short</string>
     /* GPS prompt */
     <string name="prompt_title">GPS not active</string>
     <string name="prompt_desc">OK activate GPS or CANCEL shutdown app.</string>

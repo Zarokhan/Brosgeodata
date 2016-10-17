@@ -21,7 +21,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import se.mah.ae5929.brosgeodata.R;
@@ -35,6 +34,7 @@ import se.mah.ae5929.brosgeodata.service.TCPConnectionService;
 public class MainController extends BaseController<MainActivity> {
 
     private static final String TAG = MainController.class.getName();
+    private static final LatLng GÄDDAN = new LatLng(55.6075872, 12.9891138);
 
     private MainFragment mMainFrag;
     private GoogleMap mMap;
@@ -42,10 +42,8 @@ public class MainController extends BaseController<MainActivity> {
     private TCPConnectionService mService;
     private boolean mBound = false;
 
-    //private Map<Marker, CustomMarker>
-
     private int mID;
-    private String mAlias;
+    private String mUser;
     private String mGroup;
     private LatLng mLocation;
 
@@ -62,7 +60,8 @@ public class MainController extends BaseController<MainActivity> {
     protected void initializeController() {
         Intent intent = getActivity().getIntent();
         mID = intent.getIntExtra("aliasid", -1);
-        mAlias = intent.getStringExtra("alias");
+        mUser = intent.getStringExtra("alias");
+        mGroup = intent.getStringExtra("group");
 
         mMainFrag = new MainFragment();
         mMainFrag.setController(this);
@@ -82,14 +81,17 @@ public class MainController extends BaseController<MainActivity> {
     public void onMapReady(GoogleMap map) {
         this.mMap = map;
 
-        /*if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             return;
-        }*/
-        //mMap.setMyLocationEnabled(true);
+        }
+        mMap.setMyLocationEnabled(true);
 
         Location location = getCurrentLocation();
-        mLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        if(location != null)
+            mLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        else
+            mLocation = GÄDDAN;
 
         Resources res = getActivity().getResources();
         float zoom = 9.0f;
@@ -121,10 +123,10 @@ public class MainController extends BaseController<MainActivity> {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             return;
         }
-        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000 * 60, 0, mLocationListener);
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
 
         /*
-        JSONObject register = new JSONObject();
+
         JSONObject deregister = new JSONObject();
         JSONObject requestMembers = new JSONObject();
         JSONObject groups = new JSONObject();
@@ -132,9 +134,7 @@ public class MainController extends BaseController<MainActivity> {
 
         try {
             // Register
-            register.put("type", "register");
-            register.put("group", mGroup);
-            register.put("member", mAlias);
+
             // deregister
             deregister.put("type", "unregister");
             deregister.put("id", mID);
@@ -152,10 +152,6 @@ public class MainController extends BaseController<MainActivity> {
             e.printStackTrace();
         }
         */
-
-        if (mBound) {
-            //mService.send();
-        }
     }
 
     public void onPause() {
@@ -177,25 +173,34 @@ public class MainController extends BaseController<MainActivity> {
 
     // Handling main stuff
     private class MainListener extends Thread {
+        private final String TAG = MainListener.class.getName();
 
         @Override
         public void run() {
             try {
-                while(mService == null)
-                    this.wait();
-
                 // Wait if we are not yet connected;
-                while(!mService.isConnected()){
+                while(mService == null || !mService.isConnected()){
                     Log.d(TAG, "Waiting for connection");
-                    this.wait();
+                    this.sleep(1000);
                 }
 
-                Log.d(TAG, "Connection established");
+                Log.d(TAG, "Register user");
 
-                while (mService.isConnected()) {
-                    Log.d(TAG, "RUNNING");
-                    Thread.sleep(1000);
-                }
+                JSONObject register = new JSONObject();
+                register.put("type", "register");
+                register.put("group", mGroup);
+                register.put("member", mUser);
+
+                Log.d(TAG, register.toString());
+
+                mService.send(register.toString());
+
+                String answer = null;
+                while(answer == null)
+                    answer = mService.receive();
+
+                Log.d(TAG, answer);
+
                 // Register user
                 // Retreive ID
                 // Register group
@@ -204,6 +209,8 @@ public class MainController extends BaseController<MainActivity> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            Log.d(TAG, "MainListener complete");
         }
     }
 
