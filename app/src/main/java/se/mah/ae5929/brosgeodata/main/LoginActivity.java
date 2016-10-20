@@ -3,6 +3,7 @@ package se.mah.ae5929.brosgeodata.main;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.utility.BaseActivity;
@@ -20,6 +21,9 @@ public class LoginActivity extends BaseActivity<LoginController> {
         setContainerViewId(R.id.login_container);
         LoginController c = new LoginController(this);
         setController(c);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
     }
 
     @Override

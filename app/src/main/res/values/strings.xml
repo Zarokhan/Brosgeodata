@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Brosgeodata</string>
+    <string name="logintitle">Login</string>
 
     <string name="prompt_username">User name</string>
     <string name="action_sign_in">Sign in</string>
@@ -17,5 +18,11 @@
 
     <string name="logingroup">Group</string>
     <string name="marker_my_position">My position</string>
+    <string name="title_activity_main2">Main2Activity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
 
 </resources>

@@ -144,6 +144,7 @@ public class TCPConnectionService extends Service {
                 thread.stop();
                 receiveBuffer.put("CLOSED");
                 isConnected = false;
+                notifyAll();
             } catch (Exception e) {
                 exception = e;
                 receiveBuffer.put("EXCEPTION");

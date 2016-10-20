@@ -22,9 +22,14 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.json.JSONTokener;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
@@ -50,6 +55,8 @@ public class MainController extends BaseController<MainActivity> {
     private String mGroup;
     private LatLng mLocation;
 
+    private Queue<String> mGroups;
+
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
 
@@ -62,9 +69,11 @@ public class MainController extends BaseController<MainActivity> {
     @Override
     protected void initializeController() {
         Intent intent = getActivity().getIntent();
-        mID = intent.getIntExtra("aliasid", -1);
+        //mID = intent.getIntExtra("aliasid", -1);
+        mID = -1;
         mUser = intent.getStringExtra("alias");
         mGroup = intent.getStringExtra("group");
+        mGroups = new LinkedList<String>();
 
         mMainFrag = new MainFragment();
         mMainFrag.setController(this);
@@ -72,8 +81,7 @@ public class MainController extends BaseController<MainActivity> {
         mLocationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         mLocationListener = new LocList();
 
-        mMainThread = new MainListener();
-        mMainThread.start();
+
 
         getActivity().addFragment(mMainFrag, "MAIN");
 
@@ -118,6 +126,10 @@ public class MainController extends BaseController<MainActivity> {
     public void onStart() {
         Intent serviceIntent = new Intent(getActivity(), TCPConnectionService.class);
         getActivity().bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
+
+        mMainThread = new MainListener();
+        mMainThread.start();
+
         Log.d(TAG, "onStart");
     }
 
@@ -140,18 +152,18 @@ public class MainController extends BaseController<MainActivity> {
     // Stops the service
     public void onStop() {
         if(mBound){
-            mService.disconnect();
-            getActivity().unbindService(mConnection);
-            mBound = false;
+            mMainThread.terminate();
         }
     }
 
     // Handling main stuff
     private class MainListener extends Thread {
         private final String TAG = MainListener.class.getName();
+        private boolean mRunning;
 
         @Override
         public void run() {
+            mRunning = true;
             try {
                 // Wait if we are not yet connected;
                 while(mService == null || !mService.isConnected()){
@@ -159,47 +171,115 @@ public class MainController extends BaseController<MainActivity> {
                     this.sleep(1000);
                 }
 
-                Log.d(TAG, "Register user");
+                RegisterUser();
+                UpdateGroups();
 
-                JSONObject register = new JSONObject();
-                register.put("type", "register");
-                register.put("group", mGroup);
-                register.put("member", mUser);
-
-                // Send registration
-                mService.send(register.toString());
-
-                // Wait for registration
-                String answer = null;
-                while(answer == null || answer.isEmpty())
+                // Main loop
+                while(mRunning)
                 {
-                    answer = mService.receive();
-                    try {
-                        JSONObject jsonobj = new JSONObject(answer);
-                        if(jsonobj.getString("type").equals("register")) {
-                            String group = jsonobj.getString("group");
-                            if(mGroup.equals(group))
-                            {
-                                String id = (String)jsonobj.get("id");
-                                Long test = Long.parseLong(id.split(",")[2]);
-                                mID = test;
-                            }
-                        }
-                        else {
-                            answer = null;
-                        }
-                    } catch (Exception e) {
-                        answer = null;
-                    }
-
+                    this.sleep(100);
                 }
 
-                Log.d(TAG, "Registration complete");
+                UnregisterUser();
+                UnbindTCPService();
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
             Log.d(TAG, "MainListener complete");
+        }
+
+        private void RegisterUser() throws JSONException, InterruptedException {
+            Log.d(TAG, "Register user");
+
+            JSONObject register = new JSONObject();
+            register.put("type", "register");
+            register.put("group", mGroup);
+            register.put("member", mUser);
+
+            // Send registration
+            mService.send(register.toString());
+
+            // Wait for registration
+            String answer = null;
+            while(answer == null || answer.isEmpty())
+            {
+                answer = mService.receive();
+                try {
+                    JSONObject jsonobj = new JSONObject(answer);
+                    if(jsonobj.getString("type").equals("register")) {
+                        String group = jsonobj.getString("group");
+                        if(mGroup.equals(group))
+                        {
+                            String id = (String)jsonobj.get("id");
+                            Long test = Long.parseLong(id.split(",")[2]);
+                            mID = test;
+                        }
+                    }
+                    else {
+                        answer = null;
+                    }
+                } catch (Exception e) {
+                    answer = null;
+                }
+            }
+            Log.d(TAG, "Registration complete");
+        }
+
+        private void UnbindTCPService() throws InterruptedException {
+            // disconnect remove service
+            mService.disconnect();
+            while(mService.isConnected())
+                wait();
+            getActivity().unbindService(mConnection);
+            mBound = false;
+            Log.d(TAG, "Service disconnected & unbound");
+        }
+
+        private void UnregisterUser() throws JSONException {
+            // Unregister
+            JSONObject unregister = new JSONObject();
+            unregister.put("type", "unregister");
+            unregister.put("id", mID);
+            mService.send(unregister.toString());
+            Log.d(TAG, "Unregistered user");
+        }
+
+        private void UpdateGroups() throws JSONException, InterruptedException {
+            mGroups.clear();
+
+            // Get all groups
+            JSONObject getgroups = new JSONObject();
+            getgroups.put("type", "groups");
+            mService.send(getgroups.toString());
+            String answer = null;
+
+            while(answer == null || answer.isEmpty())
+            {
+                answer = mService.receive();
+                try {
+                    JSONObject jsonobj = new JSONObject(answer);
+                    if(jsonobj.getString("type").equals("groups"))
+                    {
+                        JSONArray jsonArray = new JSONArray(jsonobj.getString("groups"));
+                        for (int i = 0; i < jsonArray.length(); ++i)
+                        {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+                            String group = obj.getString("group");
+                            mGroups.add(group);
+                        }
+                    }
+                    else
+                        answer = null;
+                } catch (Exception e) {
+                    answer = null;
+                }
+            }
+            Log.d(TAG, "Fetch all groups");
+        }
+
+        public void terminate() {
+            mRunning = false;
         }
     }
 
