@@ -14,7 +14,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
-import android.util.JsonReader;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -25,11 +24,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
-import org.json.JSONTokener;
-
-import java.util.LinkedList;
-import java.util.Queue;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
@@ -50,12 +44,7 @@ public class MainController extends BaseController<MainActivity> {
     private TCPConnectionService mService;
     private boolean mBound = false;
 
-    private long mID;
-    private String mUser;
-    private String mGroup;
-    private LatLng mLocation;
-
-    private Queue<String> mGroups;
+    private MainBuffer mBuffer;
 
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
@@ -69,19 +58,13 @@ public class MainController extends BaseController<MainActivity> {
     @Override
     protected void initializeController() {
         Intent intent = getActivity().getIntent();
-        //mID = intent.getIntExtra("aliasid", -1);
-        mID = -1;
-        mUser = intent.getStringExtra("alias");
-        mGroup = intent.getStringExtra("group");
-        mGroups = new LinkedList<String>();
+        mBuffer = new MainBuffer(intent);
 
         mMainFrag = new MainFragment();
         mMainFrag.setController(this);
 
         mLocationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         mLocationListener = new LocList();
-
-
 
         getActivity().addFragment(mMainFrag, "MAIN");
 
@@ -100,14 +83,15 @@ public class MainController extends BaseController<MainActivity> {
 
         Location location = getCurrentLocation();
         if(location != null)
-            mLocation = new LatLng(location.getLatitude(), location.getLongitude());
+            mBuffer.setLocation(location.getLatitude(), location.getLongitude());
         else
-            mLocation = GÄDDAN;
+            mBuffer.setLocation(GÄDDAN.latitude, GÄDDAN.longitude);
 
+        LatLng loc = new LatLng(mBuffer.getLatitude(), mBuffer.getLongitude());
         Resources res = getActivity().getResources();
         float zoom = 9.0f;
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLocation, zoom));
-        mMap.addMarker(new MarkerOptions().position(mLocation).title(res.getString(R.string.marker_my_position)));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoom));
+        mMap.addMarker(new MarkerOptions().position(loc).title(res.getString(R.string.marker_my_position)));
         Log.d(TAG, "onMapReady");
     }
 
@@ -168,19 +152,22 @@ public class MainController extends BaseController<MainActivity> {
                 // Wait if we are not yet connected;
                 while(mService == null || !mService.isConnected()){
                     Log.d(TAG, "Waiting for connection");
-                    this.sleep(1000);
+                    sleep(1000);
                 }
 
                 RegisterUser();
-                UpdateGroups();
+                CurrentGroups();
 
                 // Main loop
                 while(mRunning)
                 {
-                    this.sleep(100);
+                    //UpdateGroups();
+                    MessageListener();
+                    SetPosition();
+                    sleep(1000);
                 }
 
-                UnregisterUser();
+                DeregisterUser();
                 UnbindTCPService();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -189,40 +176,91 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "MainListener complete");
         }
 
-        private void RegisterUser() throws JSONException, InterruptedException {
-            Log.d(TAG, "Register user");
-
-            JSONObject register = new JSONObject();
-            register.put("type", "register");
-            register.put("group", mGroup);
-            register.put("member", mUser);
-
-            // Send registration
-            mService.send(register.toString());
-
-            // Wait for registration
+        private void MessageListener() throws InterruptedException {
             String answer = null;
             while(answer == null || answer.isEmpty())
             {
                 answer = mService.receive();
                 try {
                     JSONObject jsonobj = new JSONObject(answer);
-                    if(jsonobj.getString("type").equals("register")) {
+                    String type = jsonobj.getString("type");
+
+                    if(type.equals("register"))
+                    {
                         String group = jsonobj.getString("group");
-                        if(mGroup.equals(group))
+                        if(mBuffer.getGroup().equals(group))
                         {
                             String id = (String)jsonobj.get("id");
-                            Long test = Long.parseLong(id.split(",")[2]);
-                            mID = test;
+                            Long parsedID = Long.parseLong(id.split(",")[2]);
+                            mBuffer.setID(parsedID);
                         }
                     }
-                    else {
+                    else if(type.equals("groups"))
+                    {
+                        mBuffer.clearGroups();
+                        JSONArray jsonArray = new JSONArray(jsonobj.getString("groups"));
+                        for(int i = 0; i < jsonArray.length(); ++i)
+                        {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+                            String group = obj.getString("group");
+                            mBuffer.addGroup(group);
+                        }
+                    }
+                    else if(type.equals("locations"))
+                    {
+                        String group = jsonobj.getString("group");
+                        JSONArray jsonArray = new JSONArray(jsonobj.getString("location"));
+                        for(int i = 0; i < jsonArray.length(); ++i)
+                        {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+                            String name = obj.getString("member");
+                            double lon = Double.parseDouble(obj.getString("longitude"));
+                            double lat = Double.parseDouble(obj.getString("latitude"));
+                            mBuffer.addUser(new User(group, name, lat, lon));
+                        }
+                    }
+                    else if (type.equals("exception"))
+                    {
+                        String msg = jsonobj.getString("message");
+                        Log.d(TAG, "Exception: " + msg);
+                    }
+                    else
+                    {
                         answer = null;
                     }
                 } catch (Exception e) {
                     answer = null;
                 }
             }
+        }
+
+        private void CurrentGroups() throws JSONException {
+            JSONObject obj = new JSONObject();
+            obj.put("type", "groups");
+            mService.send(obj.toString());
+        }
+
+        private void SetPosition() throws JSONException {
+            JSONObject location = new JSONObject();
+            location.put("type", "location");
+            location.put("id", mBuffer.getID());
+            location.put("longitude", "" + mBuffer.getLongitude());
+            location.put("latitude", "" + mBuffer.getLatitude());
+            mService.send(location.toString());
+
+            Log.d(TAG, "Location sent");
+        }
+
+        private void RegisterUser() throws JSONException, InterruptedException {
+            Log.d(TAG, "Register user");
+
+            JSONObject register = new JSONObject();
+            register.put("type", "register");
+            register.put("group", mBuffer.getGroup());
+            register.put("member", mBuffer.getUser());
+
+            // Send registration
+            mService.send(register.toString());
             Log.d(TAG, "Registration complete");
         }
 
@@ -236,17 +274,18 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "Service disconnected & unbound");
         }
 
-        private void UnregisterUser() throws JSONException {
+        private void DeregisterUser() throws JSONException {
             // Unregister
             JSONObject unregister = new JSONObject();
             unregister.put("type", "unregister");
-            unregister.put("id", mID);
+            unregister.put("id", mBuffer.getID());
             mService.send(unregister.toString());
             Log.d(TAG, "Unregistered user");
         }
 
+        /*
         private void UpdateGroups() throws JSONException, InterruptedException {
-            mGroups.clear();
+            mBuffer.clearGroups();
 
             // Get all groups
             JSONObject getgroups = new JSONObject();
@@ -259,14 +298,19 @@ public class MainController extends BaseController<MainActivity> {
                 answer = mService.receive();
                 try {
                     JSONObject jsonobj = new JSONObject(answer);
-                    if(jsonobj.getString("type").equals("groups"))
+                    String group = jsonobj.getString("group");
+
+                    if(jsonobj.getString("type").equals("locations"))
                     {
-                        JSONArray jsonArray = new JSONArray(jsonobj.getString("groups"));
+                        JSONArray jsonArray = new JSONArray(jsonobj.getString("location"));
                         for (int i = 0; i < jsonArray.length(); ++i)
                         {
                             JSONObject obj = jsonArray.getJSONObject(i);
-                            String group = obj.getString("group");
-                            mGroups.add(group);
+                            String name = obj.getString("member");
+                            double lon = Double.parseDouble(obj.getString("longitude"));
+                            double lat = Double.parseDouble(obj.getString("latitude"));
+
+                            mBuffer.addUser(new User(group, name, lat, lon));
                         }
                     }
                     else
@@ -276,7 +320,7 @@ public class MainController extends BaseController<MainActivity> {
                 }
             }
             Log.d(TAG, "Fetch all groups");
-        }
+        }*/
 
         public void terminate() {
             mRunning = false;
@@ -289,7 +333,7 @@ public class MainController extends BaseController<MainActivity> {
         public void onLocationChanged(Location location) {
             double lat = location.getLatitude();
             double lon = location.getLongitude();
-            mLocation = new LatLng(lat, lon);
+            mBuffer.setLocation(lat, lon);
             Log.d(TAG, "onLocationChanged Lng=" + lon + " Lat=" + lat);
         }
 
