@@ -1,5 +1,10 @@
 apply plugin: 'com.android.application'
 
+repositories {
+    maven { url 'http://repo1.maven.org/maven2' }
+    jcenter { url "http://jcenter.bintray.com/" }
+}
+
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.2"
@@ -10,6 +15,7 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
     buildTypes {
         release {

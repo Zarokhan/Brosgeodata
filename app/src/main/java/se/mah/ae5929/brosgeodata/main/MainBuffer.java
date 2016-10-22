@@ -38,35 +38,46 @@ public class MainBuffer {
     }
 
     public synchronized void setLocation(double lat, double lon) {
-        mMe.mLocation.setFirst(lat);
-        mMe.mLocation.setSecond(lon);
+        mMe.setLocation(new Pair<Double, Double>(lat, lon));
     }
 
     public synchronized void setID(long ID) {
-        mMe.mID = ID;
+        mMe.setID(ID);
+    }
+
+    public synchronized void setIDString(String IDString) {
+        mMe.setIDString(IDString);
     }
 
     /*
      * Getters
      */
 
+    public synchronized LinkedList<User> getUsers() {
+        return mUsers;
+    }
+
     public synchronized double getLatitude(){
-        return mMe.mLocation.getFirst();
+        return mMe.getLocation().getFirst();
     }
 
     public synchronized double getLongitude() {
-        return mMe.mLocation.getSecond();
+        return mMe.getLocation().getSecond();
     }
 
-    public synchronized double getID() {
-        return mMe.mID;
+    public synchronized long getID() {
+        return mMe.getID();
+    }
+
+    public synchronized String getIDString() {
+        return mMe.getIDString();
     }
 
     public synchronized String getGroup() {
-        return mMe.mGroup;
+        return mMe.getGroup();
     }
 
-    public synchronized String getUser() {
-        return mMe.mUser;
+    public synchronized User getUser() {
+        return mMe;
     }
 }
