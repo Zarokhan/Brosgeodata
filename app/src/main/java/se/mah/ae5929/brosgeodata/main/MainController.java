@@ -28,11 +28,12 @@ import org.json.JSONObject;
 
 import java.util.LinkedList;
 
-import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.fragments.MainFragment;
-import se.mah.ae5929.brosgeodata.service.RunOnThread;
 import se.mah.ae5929.brosgeodata.utility.BaseController;
 import se.mah.ae5929.brosgeodata.service.TCPConnectionService;
+import se.mah.ae5929.brosgeodata.mainutility.MainBuffer;
+import se.mah.ae5929.brosgeodata.mainutility.Pair;
+import se.mah.ae5929.brosgeodata.mainutility.User;
 
 /**
  * Created by Robin on 2016-10-04.
@@ -48,6 +49,7 @@ public class MainController extends BaseController<MainActivity> {
 
     private TCPConnectionService mService;
     private boolean mBound = false;
+    private ServiceConnection mConnection;
 
     private MainBuffer mBuffer;
 
@@ -60,6 +62,9 @@ public class MainController extends BaseController<MainActivity> {
         super(activity);
     }
 
+    /*
+    * When fragment loaded
+    * */
     @Override
     protected void initializeController() {
         Intent intent = getActivity().getIntent();
@@ -75,10 +80,19 @@ public class MainController extends BaseController<MainActivity> {
 
         getActivity().addFragment(mMainFrag, "MAIN");
 
+        Intent serviceIntent = new Intent(getActivity(), TCPConnectionService.class);
+        mConnection = new ServerConn();
+        getActivity().bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
+
+        mMainThread = new MainListener();
+        mMainThread.start();
+
         Log.d(TAG, "initializeController");
     }
 
-    // Runs when the map is ready
+    /*
+    * Map ready for use
+    * */
     public void onMapReady(GoogleMap map) {
         this.mMap = map;
 
@@ -103,6 +117,9 @@ public class MainController extends BaseController<MainActivity> {
         Log.d(TAG, "onMapReady");
     }
 
+    /*
+    * Update player markers on map
+    * */
     private void UpdateMarkers()
     {
         // Clear users
@@ -120,6 +137,9 @@ public class MainController extends BaseController<MainActivity> {
         }
     }
 
+    /*
+    * Get the current gps location
+    * */
     private Location getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -131,17 +151,16 @@ public class MainController extends BaseController<MainActivity> {
     }
 
 
-    // Start point of service
+    /*
+    * Activity on start
+    * */
     public void onStart() {
-        Intent serviceIntent = new Intent(getActivity(), TCPConnectionService.class);
-        getActivity().bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
-
-        mMainThread = new MainListener();
-        mMainThread.start();
-
         Log.d(TAG, "onStart");
     }
 
+    /*
+    * Activity on resume
+    * */
     public void onResume() {
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -150,6 +169,9 @@ public class MainController extends BaseController<MainActivity> {
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
     }
 
+    /*
+    * Activity on pause
+    * */
     public void onPause() {
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -158,14 +180,32 @@ public class MainController extends BaseController<MainActivity> {
         mLocationManager.removeUpdates(mLocationListener);
     }
 
-    // Stops the service
+    /*
+    * Activity on stop
+    * */
     public void onStop() {
-        if(mBound){
-            mMainThread.terminate();
+        mMainThread.terminate();
+    }
+
+    /*
+    * Unbind service
+    * Note: Test if it work correctly
+    * */
+    public void UnbindTCPService() {
+        if(mService.isConnected())
+            mService.disconnect();
+        if(mBound)
+        {
+            getActivity().unbindService(mConnection);
+            mBound = false;
+            Log.d(TAG, "Service disconnected & unbound");
         }
     }
 
-    // Handling main stuff
+    /*
+    * Main controller worker thread
+    * Handles data from the server
+    * */
     private class MainListener extends Thread {
         private final String TAG = MainListener.class.getName();
         private boolean mRunning;
@@ -186,14 +226,15 @@ public class MainController extends BaseController<MainActivity> {
                 // Main loop
                 while(mRunning)
                 {
-                    //UpdateGroups();
                     MessageListener();
                     SetPosition();
                     sleep(1000);
                 }
 
                 DeregisterUser();
-                UnbindTCPService();
+
+                if(mService.isConnected())
+                    mService.disconnect();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -201,6 +242,9 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "MainListener complete");
         }
 
+        /*
+        * Handles server incoming messages.
+        * */
         private void MessageListener() throws InterruptedException {
             String answer = null;
             while(answer == null || answer.isEmpty())
@@ -266,12 +310,18 @@ public class MainController extends BaseController<MainActivity> {
             }
         }
 
+        /*
+        * Request current groups
+        * */
         private void CurrentGroups() throws JSONException {
             JSONObject obj = new JSONObject();
             obj.put("type", "groups");
             mService.send(obj.toString());
         }
 
+        /*
+        * Send user location
+        * */
         private void SetPosition() throws JSONException {
             JSONObject location = new JSONObject();
             location.put("type", "location");
@@ -283,6 +333,9 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "Location sent");
         }
 
+        /*
+        * Send registration
+        * */
         private void RegisterUser() throws JSONException, InterruptedException {
             Log.d(TAG, "Register user");
 
@@ -296,16 +349,10 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "Registration complete");
         }
 
-        private void UnbindTCPService() throws InterruptedException {
-            // disconnect remove service
-            mService.disconnect();
-            while(mService.isConnected())
-                wait();
-            getActivity().unbindService(mConnection);
-            mBound = false;
-            Log.d(TAG, "Service disconnected & unbound");
-        }
-
+        /*
+        * Deregister user
+        * Logout user
+        * */
         private void DeregisterUser() throws JSONException {
             // Unregister
             JSONObject unregister = new JSONObject();
@@ -315,11 +362,17 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "Unregistered user");
         }
 
+        /*
+        * Stop thread
+        * */
         public void terminate() {
             mRunning = false;
         }
     }
 
+    /*
+    * Location listener
+    * */
     private class LocList implements LocationListener {
 
         @Override
@@ -346,7 +399,11 @@ public class MainController extends BaseController<MainActivity> {
         }
     }
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    /*
+    * Connection for bound server
+    * */
+    private class ServerConn implements ServiceConnection {
+
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             TCPConnectionService.TCPConnectionBinder binder = (TCPConnectionService.TCPConnectionBinder) service;
@@ -361,5 +418,5 @@ public class MainController extends BaseController<MainActivity> {
             mService = null;
             Log.d(TAG, "onServiceDisconnected");
         }
-    };
+    }
 }

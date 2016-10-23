@@ -1,7 +1,11 @@
 package se.mah.ae5929.brosgeodata.main;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -51,14 +55,20 @@ public class MainActivity extends BaseActivity<MainController> implements Naviga
 
     @Override
     public void onStart() {
+        //controller.onStart();
         super.onStart();
-        controller.onStart();
     }
 
     @Override
     public void onStop() {
+        //controller.onStop();
         super.onStop();
-        controller.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        controller.UnbindTCPService();
+        super.onDestroy();
     }
 
     @Override
@@ -73,19 +83,36 @@ public class MainActivity extends BaseActivity<MainController> implements Naviga
         controller.onPause();
     }
 
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-    }
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+
+            Resources res = getResources();
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+            alertDialogBuilder.setTitle(res.getString(R.string.prompt_title_shutdown));
+            alertDialogBuilder.setMessage(res.getString(R.string.prompt_desc_shutdown));
+            alertDialogBuilder.setPositiveButton(res.getString(R.string.prompt_positive), new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    controller.onStop();
+                    Intent data = new Intent();
+                    data.putExtra("action", "exit");
+                    setResult(Activity.RESULT_OK, data);
+                    finish();
+                }
+            });
+            alertDialogBuilder.setNegativeButton(res.getString(R.string.prompt_negative), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+
+            AlertDialog dialog = alertDialogBuilder.create();
+            dialog.show();
         }
     }
 
@@ -104,7 +131,12 @@ public class MainActivity extends BaseActivity<MainController> implements Naviga
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_logout) {
+            controller.onStop();
+            Intent data = new Intent();
+            data.putExtra("action", "logout");
+            setResult(Activity.RESULT_OK, data);
+            finish();
             return true;
         }
 

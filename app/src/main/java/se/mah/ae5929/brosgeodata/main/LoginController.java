@@ -126,7 +126,7 @@ public class LoginController extends BaseController<LoginActivity> {
         intent.putExtra("aliasid", id);
         intent.putExtra("alias", mUsername);
         intent.putExtra("group", mGroup);
-        activity.startActivity(intent);
+        activity.startActivityForResult(intent, LoginActivity.NAME);
     }
 
     /**

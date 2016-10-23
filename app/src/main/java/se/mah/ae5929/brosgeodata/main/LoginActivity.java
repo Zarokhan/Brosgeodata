@@ -33,6 +33,14 @@ public class LoginActivity extends BaseActivity<LoginController> {
             controller.confirmGPS();
             controller.confirmNetwork();
         }
+        else if (resultCode == Activity.RESULT_OK && requestCode==NAME) {
+            String action = data.getStringExtra("action");
+            if(action.equals("exit")) {
+                finish();
+            } else if (action.equals("logout")) {
+
+            }
+        }
     }
 }
 

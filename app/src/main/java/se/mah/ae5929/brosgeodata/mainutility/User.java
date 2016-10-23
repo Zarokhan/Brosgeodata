@@ -1,4 +1,4 @@
-package se.mah.ae5929.brosgeodata.main;
+package se.mah.ae5929.brosgeodata.mainutility;
 
 /**
  * Created by Zarokhan on 2016-10-21.
