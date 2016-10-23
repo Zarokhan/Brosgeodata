@@ -23,6 +23,7 @@ public class LoginActivity extends BaseActivity<LoginController> {
         setController(c);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(getResources().getString(R.string.app_name));
         setSupportActionBar(toolbar);
     }
 

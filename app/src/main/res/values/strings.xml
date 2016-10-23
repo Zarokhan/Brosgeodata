@@ -2,7 +2,7 @@
     <string name="app_name">Brosgeodata</string>
     <string name="logintitle">Login</string>
 
-    <string name="prompt_username">User name</string>
+    <string name="prompt_username">Login</string>
     <string name="action_sign_in">Sign in</string>
     <string name="error_invalid_alias">This username is too short</string>
     <string name="error_invalid_group">This group name is too short</string>

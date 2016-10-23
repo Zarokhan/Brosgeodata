@@ -9,7 +9,6 @@
     tools:context="se.mah.ae5929.brosgeodata.fragments.LoginFragment"
     android:id="@+id/login_layout">
 
-    <!-- TODO: Update blank fragment layout -->
 
     <LinearLayout
         android:orientation="vertical"
