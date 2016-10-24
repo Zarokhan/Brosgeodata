@@ -38,8 +38,9 @@ public class LoginActivity extends BaseActivity<LoginController> {
             String action = data.getStringExtra("action");
             if(action.equals("exit")) {
                 finish();
-            } else if (action.equals("logout")) {
-
+            } else if (action.equals("reregister")) {
+                String group = data.getStringExtra("group");
+                controller.setGroup(group);
             }
         }
     }

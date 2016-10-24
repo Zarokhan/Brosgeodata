@@ -11,7 +11,7 @@ import java.util.Queue;
 public class MainBuffer {
 
     private User mMe;
-    private Queue<String> mGroups;
+    private LinkedList<String> mGroups;
     private LinkedList<User> mUsers;
 
     public MainBuffer(Intent intent)
@@ -49,9 +49,23 @@ public class MainBuffer {
         mMe.setIDString(IDString);
     }
 
+    public synchronized void setGroup(String gr)
+    {
+        mMe.setGroup(gr);
+    }
+
     /*
      * Getters
      */
+
+    public synchronized String[] getGroups()
+    {
+        String[] sarray = new String[mGroups.size()];
+        for(int i = 0; i < mGroups.size(); i++)
+            sarray[i] = mGroups.get(i);
+
+        return sarray;
+    }
 
     public synchronized LinkedList<User> getUsers() {
         return mUsers;

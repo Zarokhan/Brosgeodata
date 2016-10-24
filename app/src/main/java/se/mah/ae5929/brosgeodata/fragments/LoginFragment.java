@@ -141,4 +141,8 @@ public class LoginFragment extends BaseFragment<LoginController> {
         editor.apply();
     }
 
+    public void setGroup(String group)
+    {
+        mGroupView.setText(group);
+    }
 }

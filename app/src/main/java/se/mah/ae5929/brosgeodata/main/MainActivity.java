@@ -2,6 +2,7 @@ package se.mah.ae5929.brosgeodata.main;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -15,7 +16,9 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
+import android.widget.ListView;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.utility.BaseActivity;
@@ -81,6 +84,18 @@ public class MainActivity extends BaseActivity<MainController> implements Naviga
     public void onPause() {
         super.onPause();
         controller.onPause();
+    }
+
+    public void updateNavDrawer(String[] items) {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        Menu menu = navigationView.getMenu();
+        menu.clear();
+
+        SubMenu sub = menu.addSubMenu("Groups");
+        for(int i = 0; i < items.length; i++)
+        {
+            sub.add(items[i]);
+        }
     }
 
     @Override
@@ -149,19 +164,14 @@ public class MainActivity extends BaseActivity<MainController> implements Naviga
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        String group = item.getTitle().toString();
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
+        controller.onStop();
+        Intent data = new Intent();
+        data.putExtra("action", "reregister");
+        data.putExtra("group", group);
+        setResult(Activity.RESULT_OK, data);
+        finish();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

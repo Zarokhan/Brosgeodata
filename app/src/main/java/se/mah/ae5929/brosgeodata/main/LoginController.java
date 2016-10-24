@@ -39,6 +39,11 @@ public class LoginController extends BaseController<LoginActivity> {
         confirmNetwork();
     }
 
+    public void setGroup(String group){
+        mGroup = group;
+        mLoginFrag.setGroup(group);
+    }
+
     public void confirmNetwork() {
         if(!isOnline(getActivity())){
             Resources res = getActivity().getResources();
@@ -148,7 +153,7 @@ public class LoginController extends BaseController<LoginActivity> {
             // CONNECT TO SERVER HERE
             try {
                 // Simulate network access.
-                Thread.sleep(2000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
             }
 

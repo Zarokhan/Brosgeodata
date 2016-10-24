@@ -26,5 +26,9 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_logout">Logout</string>
+    <string name="myemail">paul.robin.andersson@gmail.com</string>
+
+    <string name="drawer_groups">Groups</string>
+    <string name="drawer_names">Members</string>
 
 </resources>

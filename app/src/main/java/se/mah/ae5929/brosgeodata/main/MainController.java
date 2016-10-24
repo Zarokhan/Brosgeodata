@@ -221,13 +221,13 @@ public class MainController extends BaseController<MainActivity> {
                 }
 
                 RegisterUser();
-                CurrentGroups();
 
                 // Main loop
                 while(mRunning)
                 {
                     MessageListener();
                     SetPosition();
+                    CurrentGroups();
                     sleep(1000);
                 }
 
@@ -275,6 +275,13 @@ public class MainController extends BaseController<MainActivity> {
                             String group = obj.getString("group");
                             mBuffer.addGroup(group);
                         }
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                activity.updateNavDrawer(mBuffer.getGroups());
+                            }
+                        });
                     }
                     else if(type.equals("locations"))
                     {
