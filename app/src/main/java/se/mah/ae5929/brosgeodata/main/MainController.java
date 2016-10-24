@@ -45,6 +45,7 @@ public class MainController extends BaseController<MainActivity> {
 
     private MainFragment mMainFrag;
     private GoogleMap mMap;
+    private float zoom = 9.0f;
     private LinkedList<Pair<Marker, User>> mMarkers;
 
     private TCPConnectionService mService;
@@ -110,11 +111,15 @@ public class MainController extends BaseController<MainActivity> {
 
         LatLng loc = new LatLng(mBuffer.getLatitude(), mBuffer.getLongitude());
         Resources res = getActivity().getResources();
-        float zoom = 9.0f;
+
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoom));
         Marker marker = mMap.addMarker(new MarkerOptions().position(loc).title(mBuffer.getUser().getName() + " - " + mBuffer.getUser().getGroup()));
         mMarkers.add(new Pair<>(marker, mBuffer.getUser()));
         Log.d(TAG, "onMapReady");
+    }
+
+    public void zoomIn() {
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mBuffer.getLatitude(), mBuffer.getLongitude()), zoom));
     }
 
     /*
@@ -201,6 +206,8 @@ public class MainController extends BaseController<MainActivity> {
             Log.d(TAG, "Service disconnected & unbound");
         }
     }
+
+
 
     /*
     * Main controller worker thread

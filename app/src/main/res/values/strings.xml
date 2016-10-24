@@ -30,5 +30,7 @@
 
     <string name="drawer_groups">Groups</string>
     <string name="drawer_names">Members</string>
+    <string name="snackbar_zoom">Zomming in</string>
+
 
 </resources>

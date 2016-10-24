@@ -2,7 +2,6 @@ package se.mah.ae5929.brosgeodata.main;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -18,7 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.widget.ListView;
+
+import java.util.Locale;
 
 import se.mah.ae5929.brosgeodata.R;
 import se.mah.ae5929.brosgeodata.utility.BaseActivity;
@@ -41,7 +41,8 @@ public class MainActivity extends BaseActivity<MainController> implements Naviga
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                controller.zoomIn();
+                Snackbar.make(view, getResources().getString(R.string.snackbar_zoom), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });

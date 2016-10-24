@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Brosgeodata</string>
+    <string name="logintitle">Logga in</string>
+
+    <string name="prompt_username">Logga in</string>
+    <string name="action_sign_in">Logga in</string>
+    <string name="error_invalid_alias">Användarnamnet för kort.</string>
+    <string name="error_invalid_group">Gruppnamnet är för kort.</string>
+    /* GPS prompt */
+    <string name="prompt_title">Global positions system är inte på.</string>
+    <string name="prompt_desc">Okej, aktivera gps. Avbryt stäng av app.</string>
+    <string name="prompt_title_net">Connection not active</string>
+    <string name="prompt_desc_net">Okej aktivera nätverk eller Avbryt stäng av app.</string>
+    <string name="prompt_positive">Okej</string>
+    <string name="prompt_negative">Avbryt</string>
+    <string name="prompt_title_shutdown">Avsluta</string>
+    <string name="prompt_desc_shutdown">Vill du avsluta appen?</string>
+
+    <string name="title_activity_main">Karta</string>
+
+    <string name="logingroup">Grupp</string>
+    <string name="marker_my_position">Min position</string>
+
+    <string name="navigation_drawer_open">Öppna navigation drawer</string>
+    <string name="navigation_drawer_close">Stäng navigation drawer</string>
+
+    <string name="action_logout">Logga ut</string>
+    <string name="myemail">paul.robin.andersson@gmail.com</string>
+
+    <string name="drawer_groups">Grupper</string>
+    <string name="drawer_names">Online</string>
+    <string name="snackbar_zoom">Zomma in</string>
+
+</resources>
